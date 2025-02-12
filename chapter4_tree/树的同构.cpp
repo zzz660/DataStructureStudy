@@ -11,7 +11,7 @@ struct BinTree{
 int BuildTree(BinTree T[]){
     int n; std::cin >> n;   // 节点个数
     int check[MaxTree];     // 用来寻找根节点的数组
-    char left, right;       // 输入中有"-"，先用char接收输入
+    char left, right;       // 输入中有"-"，先用char接收输入，后续转数字
     int root = -1;
     if(n){
         for (int i = 0; i < n; ++i) check[i] = 0;

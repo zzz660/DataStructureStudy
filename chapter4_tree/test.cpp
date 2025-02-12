@@ -1,131 +1,145 @@
 #include<iostream>
 using namespace std;
-#define MaxTree 10
-#define ElementType char
-#define Tree int
-#define Null -1
-struct TreeNode {
-	ElementType data;    // 存值 
-	Tree left;   // 左子树的下标 
-	Tree right;  // 右子树的下标 
-}T1[MaxTree], T2[MaxTree];
 
-// 返回根结点的第一种方法（根节点编号未出现在其他结点编号的后面，创建一个check数组来确定）
-// 建二叉树，返回根结点 
-Tree BuildTree(struct TreeNode T[])
+//搜索树表示
+typedef struct TreeNode *Tree;
+struct TreeNode
 {
-	int i;
-	int n;
-	int check[MaxTree];  //创建一个check数组来确定根节点，若在静态链表中未出现的下标则为根节点
-	char left, right;
-	Tree root = Null;   //若n为0，返回Null
+	int v;  //用v表示结点的信息
+	Tree Left, Right;  //用链表形式表示树
+	int flag;  //flag为某个结点是否被访问过的标志，用来判别一个序列是否与树一样，如果某个结点未被访问，flag=0，否则flag=1
+};
 
-	cin >> n;
-	if (n) 
-	{
-		for (i = 0; i < n; i++) 
-		{
-			check[i] = 0;
-		}
-		for (i = 0; i < n; i++) 
-		{
-			cin >> T[i].data >> left >> right;
-			if (left != '-') 
-			{
-				T[i].left = left - '0';   //若输入不为'-',那字符减去字符0转换为整型数值
-				check[T[i].left] = 1; //把在静态链表中出现过的数值标记为1
-			}
-			else if (left == '-') 
-			{
-				T[i].left = Null;
-			}
-			if (right != '-') 
-			{
-				T[i].right = right - '0';
-				check[T[i].right] = 1;
-			}
-			else if (right == '-') 
-			{
-				T[i].right = Null;
-			}
-		}
-
-		for (i = 0; i < n; i++) 
-		{
-			if (!check[i]) 
-			{
-				break;
-			}
-		}
-		root = i;
-
-	}
-	return root;
+//建新结点（一般为第一个结点）
+Tree NewNode(int V)
+{
+	Tree T = (Tree)malloc(sizeof(struct TreeNode));
+	T->v = V;
+	T->Left = T->Right = NULL;
+	T->flag = 0;
+	return T;
 }
 
-// 返回根结点的第二种方法 （根节点编号 = 行号和 - 左右结点编号和）
-// 建二叉树，返回根结点
-//Tree BuildTree(struct TreeNode T[])
-//{
-//	int n;  //n为树的结点数
-//	int root = 0;
-//	char left, right;
-//	cin >> n;
-//	if (!n)
-//		return Null;
-//	for (int i = 0; i < n; i++) 
-//	{
-//		cin >> T[i].data >> left >> right;
-//		if (left == '-')
-//			T[i].left = Null;
-//		else 
-//		{
-//			T[i].left = left - '0';
-//			root -= T[i].left;
-//		}
-//		if (right == '-')
-//			T[i].right = Null;
-//		else 
-//		{
-//			T[i].right = right - '0';
-//			root -= T[i].right;
-//		}
-//		// 0 累加到 n-1 
-//		root += i;
-//	}
-//	return root;
-//}
-
-
-// 判断是否同构
-bool Isomorphic(int R1, int R2) 
+//后续结点的插入
+Tree Insert(Tree T, int V)
 {
-	if (R1 == Null && R2 == Null)   // 都为空 
-		return true;
-	if (R1 == Null && R2 != Null || R1 != Null && R2 == Null)    // 一个为空，一个不为空
-		return false;
-	if (T1[R1].data != T2[R2].data)   // 值不同
-		return false;
-	if ((T1[R1].left == Null) && (T2[R2].left == Null))  //左儿子均为空
+	if (!T)  //T为空
 	{
-		return Isomorphic(T1[R1].right, T2[R2].right);
+		T = NewNode(V);  //通过NewNode(V)为T构造第一个结点
 	}
-	if ((T1[R1].left != Null && T2[R2].left != Null) && (T1[T1[R1].left].data == T2[T2[R2].left].data))  // 左儿子不为空且值相等
-		return Isomorphic(T1[R1].left, T2[R2].left) && Isomorphic(T1[R1].right, T2[R2].right);
-	else   // 左儿子不为空且值不等  或者 某一个左儿子为空（有可能左边和右边同构，右边和左边同构）
-		return Isomorphic(T1[R1].right, T2[R2].left) && Isomorphic(T1[R1].left, T2[R2].right);
+	else  //T不为空
+	{
+		if (V > T->v)
+			T->Right = Insert(T->Right, V);
+		else
+			T->Left = Insert(T->Left, V);
+	}
+	return T;
 }
-int main() {
-	Tree R1, R2;
-	R1 = BuildTree(T1);
-	R2 = BuildTree(T2);
-	cout << "是否同构？" << endl;
-	if (Isomorphic(R1, R2))
-		cout << "是" << endl;
+
+//构建搜索树
+Tree MakeTree(int N)
+{
+	Tree T;
+	int V;
+
+	cin >> V;  //首先读入第一个元素放入V中
+	T = NewNode(V);  //为T构造新结点
+	for (int i = 1; i < N; i++)
+	{
+		cin >> V;  //依次读入序列后面的元素
+		T = Insert(T, V);  //读入的后面元素依次插入树T
+	}
+	return T;
+}
+
+//如何判别（已经访问过的结点要进行标记，使flag=1）
+//在树T中按顺序搜索序列中的每个数，如果每次搜索所经过的结点在前面均出现过，则一致；
+//                             否则如果某次搜索中遇到前面未出现的结点，则不一致。
+int check(Tree T, int V)
+{
+	if (T->flag)  //某个结点被访问过(因为之前的V == T->v，才使得flag =1)
+	{
+		if (V < T->v)
+			return check(T->Left, V);
+		else if (V > T->v)
+			return check(T->Right, V);
+		else  //如果V == T->v，意味着这个序列中有两个元素出现了两次以上，即重复出现，认为不一致
+			return 0;
+	}
+	else  //某个结点未被访问过
+	{
+		if (V == T->v)  //如果未被访问过的结点刚好是所搜索的，使flag=1
+		{
+			T->flag = 1;
+			return 1;
+		}
+		else  //否则未被访问过的结点不是所搜索的，即遇到前面未出现的结点，使flag=0
+			return 0;
+	}
+}
+
+int Judge(Tree T, int N)
+{
+	int V, same = 1;
+	//same：1代表目前还一致，0代表已经不一致
+
+	cin >> V;
+
+	if (V != T->v)  //序列第一个元素与T的根结点不一致
+		same = 0;  //两棵树已经不一致
 	else
-		cout << "否" << endl;
+		T->flag = 1;
 
-	system("pause");
+	for (int i = 1; i < N; i++)
+	{
+		cin >> V;
+		if ((same) && (!check(T, V))) same = 0;
+	}
 
+	if (!same) return 0;
+	else return 1;
+}
+
+//清除T中各个结点的标记
+void ResetT(Tree T)
+{
+	if (T->Left)
+		ResetT(T->Left);
+	if (T->Right)
+		ResetT(T->Right);
+	T->flag = 0;
+}
+
+//释放T的空间
+void FreeTree(Tree T)
+{
+	if (T->Left)
+		FreeTree(T->Left);
+	if (T->Right)
+		FreeTree(T->Right);
+	free(T);
+}
+
+int main()
+{
+	Tree T;
+	int N, L;  // N个结点，L个序列
+	cin >> N;
+	while (N)
+	{
+		cin >> L;
+		T = MakeTree(N);  //根据第一行序列建N个结点的树T
+		for (int i = 0; i < L; i++)  //依据树T分别判别后面的L个序列是否能与T形成同一搜索树并输出结果
+		{
+			if (Judge(T, N))
+				cout << "Yes" << endl;
+			else
+				cout << "No" << endl;
+			ResetT(T); //清除T中的标记flag
+		}
+		FreeTree(T);
+		cin >> N;
+	}
 	return 0;
 }
